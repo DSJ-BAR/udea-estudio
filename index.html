@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1D6B47">
+<title>UdeA de Bolsillo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#F3F6F4; --sheet:#FFFFFF; --ink:#18222B; --muted:#5A6770; --line:#D6DEDA;
+  --accent:#1D6B47; --accent-soft:#E2F0E8; --bad:#A63A2E; --bad-soft:#F7E4E1; --flag:#9A5B12; --flag-soft:#F7EBDA;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#10161B; --sheet:#182128; --ink:#E4EBE8; --muted:#95A3AB; --line:#2B3740;
+    --accent:#5DBE8C; --accent-soft:#1D3329; --bad:#F08A7C; --bad-soft:#3A201C; --flag:#E0A55A; --flag-soft:#3A2C1A; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;padding:20px 16px 64px}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:26px;line-height:1.2;margin:4px 0 0;text-wrap:balance}
+.lead{color:var(--muted);margin:6px 0 0;font-size:15px}
+.panel{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.lbl{font-size:13px;font-weight:600;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 12px;font:14px var(--sans);cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chip small{font-family:var(--mono);color:var(--muted);margin-left:4px}
+.btn{border:0;border-radius:8px;padding:12px 18px;font:600 15px var(--sans);cursor:pointer;background:var(--accent);color:var(--sheet)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.q{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.q.ok{border-color:var(--accent)} .q.bad{border-color:var(--bad)}
+.qhead{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.stem{margin:0;font-size:17px}
+.stem em{font-style:normal;font-weight:700;text-decoration:underline}
+.opts{display:grid;gap:8px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;color:var(--ink);cursor:pointer}
+.opt:disabled{cursor:default}
+.bubble{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--muted);display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:13px;color:var(--muted)}
+.opt.right{border-color:var(--accent);background:var(--accent-soft)} .opt.right .bubble{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)} .opt.wrong .bubble{background:var(--bad);border-color:var(--bad);color:var(--sheet)}
+.fb{border-radius:8px;padding:12px;font-size:15px;display:flex;flex-direction:column;gap:6px}
+.fb.ok{background:var(--accent-soft)} .fb.bad{background:var(--bad-soft)}
+.fb b{font-weight:700}
+.trap{color:var(--flag);font-weight:600}
+.score{font-family:var(--mono);font-size:22px;font-weight:600}
+.stat{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+.stat span:nth-child(even){font-family:var(--mono);color:var(--muted);text-align:right}
+.pdfs{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.pdfs a{color:var(--accent);font-weight:600;text-decoration:none}
+textarea{width:100%;min-height:120px;font:13px var(--mono);border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);color:var(--ink)}
+.opt:focus-visible,.chip:focus-visible,.btn:focus-visible,.pdfs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Razonamiento lógico · examen UdeA · práctica en el celular</span>
+    <h1>UdeA de Bolsillo</h1>
+    <p class="lead">Escoge tema y nivel, resuelve la tanda y la app te corrige al instante con la solución y la trampa. Lo que falles lo copias y se lo pegas a tu tutor en Claude para que te lo explique.</p>
+  </header>
+
+  <section class="panel" id="config">
+    <span class="lbl">Tema</span>
+    <div class="chips" id="temas"></div>
+    <span class="lbl">Nivel</span>
+    <div class="chips" id="niveles"></div>
+    <div class="row"><button class="btn" id="nueva" type="button">Nueva tanda de 6</button><span class="lbl" id="disp"></span></div>
+  </section>
+
+  <main id="tanda" class="wrap" style="gap:14px"></main>
+
+  <section class="panel" id="fin" hidden>
+    <span class="lbl">Resultado de la tanda</span>
+    <span class="score" id="score"></span>
+    <div class="row"><button class="btn" id="copiar" type="button">Copiar para mi tutor</button><button class="btn ghost" id="otra" type="button">Otra tanda</button><span class="lbl" id="toast" aria-live="polite"></span></div>
+    <textarea id="fallback" hidden readonly></textarea>
+  </section>
+
+  <section class="panel">
+    <span class="lbl">Tu historial en este celular</span>
+    <div class="stat" id="stats"></div>
+  </section>
+
+  <section class="panel">
+    <span class="lbl">Exámenes oficiales para leer (PDF)</span>
+    <ul class="pdfs">
+      <li><a href="examenes/Examen-UdeA-2026-1.pdf">Examen 2026-1</a></li>
+      <li><a href="examenes/Examen-UdeA-2025-2.pdf">Examen 2025-2</a></li>
+      <li><a href="examenes/Examen-UdeA-2025-1.pdf">Examen 2025-1</a></li>
+      <li><a href="examenes/Examen-UdeA-2024-2.pdf">Examen 2024-2</a></li>
+      <li><a href="examenes/Examen-UdeA-2024-1.pdf">Examen 2024-1</a></li>
+      <li><a href="examenes/Examen-UdeA-2023-2.pdf">Examen 2023-2</a></li>
+      <li><a href="examenes/Guia-Examen-UdeA.pdf">Guía oficial del examen</a></li>
+    </ul>
+  </section>
+</div>
+
+<script src="bank.js"></script>
+<script>
+const TEMAS=[["R","Orden y reglas"],["C","Condicionales"],["O","Operaciones"],["P","Patrones"],["N","Números"],["K","Conteo"],["V","Conjuntos"],["A","Aritmética"],["*","Todos"]];
+const NIVELES=[["3","Nivel UdeA"],["2","Medio"],["1","Fácil"],["*","Todos"]];
+let tema="R", nivel="3", tanda=[], resp={};
+const $=id=>document.getElementById(id);
+const L="ABCD";
+function load(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let vistos=load("bolsillo-vistos",{}), hist=load("bolsillo-hist",{});
+function pool(){return BANK.filter(q=>(tema==="*"||q.t===tema)&&(nivel==="*"||String(q.n)===nivel));}
+function chips(){
+  $("temas").innerHTML=TEMAS.map(([k,t])=>{const n=BANK.filter(q=>(k==="*"||q.t===k)).length;return `<button type="button" class="chip" id="t-${k==="*"?"all":k}" data-t="${k}" aria-pressed="${tema===k}">${t}<small>${n}</small></button>`}).join("");
+  $("niveles").innerHTML=NIVELES.map(([k,t])=>`<button type="button" class="chip" id="n-${k==="*"?"all":k}" data-n="${k}" aria-pressed="${nivel===k}">${t}</button>`).join("");
+  const p=pool(), nuevas=p.filter(q=>!vistos[q.i]).length;
+  $("disp").textContent=`${p.length} preguntas · ${nuevas} sin ver`;
+}
+$("temas").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(b){tema=b.dataset.t;chips();}});
+$("niveles").addEventListener("click",e=>{const b=e.target.closest("[data-n]");if(b){nivel=b.dataset.n;chips();}});
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function nueva(){
+  let p=pool(); if(!p.length){$("disp").textContent="No hay preguntas con ese filtro: cambia el nivel.";return}
+  const nuevas=shuffle(p.filter(q=>!vistos[q.i])), viejas=shuffle(p.filter(q=>vistos[q.i]));
+  tanda=nuevas.concat(viejas).slice(0,6); resp={};
+  $("fin").hidden=true; render(); window.scrollTo({top:$("tanda").offsetTop-10,behavior:"smooth"});
+}
+function render(){
+  $("tanda").innerHTML=tanda.map((q,i)=>{
+    const r=resp[q.i], done=r!==undefined;
+    const cls=done?(r===q.c?" ok":" bad"):"";
+    const opts=q.o.map((o,j)=>{let c="";if(done){if(j===q.c)c=" right";else if(j===r)c=" wrong";}
+      return `<button type="button" class="opt${c}" id="o-${q.i}-${j}" data-q="${q.i}" data-j="${j}" ${done?"disabled":""}><span class="bubble">${L[j]}</span><span>${o}</span></button>`}).join("");
+    const fb=done?`<div class="fb ${r===q.c?"ok":"bad"}"><span><b>${r===q.c?"Correcta":"Incorrecta. Era la "+L[q.c]}</b></span><span>${q.x}</span>${q.tr?`<span class="trap">Trampa: ${q.tr}</span>`:""}</div>`:"";
+    return `<section class="q${cls}" id="q-${q.i}"><div class="qhead"><span>Pregunta ${i+1} de ${tanda.length}</span><span>${q.s} · nivel ${q.n}</span></div><p class="stem">${q.e}</p><div class="opts">${opts}</div>${fb}</section>`;
+  }).join("");
+}
+$("tanda").addEventListener("click",e=>{
+  const b=e.target.closest(".opt"); if(!b||b.disabled) return;
+  const q=tanda.find(x=>x.i===b.dataset.q); if(resp[q.i]!==undefined) return;
+  resp[q.i]=+b.dataset.j; vistos[q.i]=1; save("bolsillo-vistos",vistos);
+  const h=hist[q.t]||{ok:0,tot:0}; h.tot++; if(resp[q.i]===q.c)h.ok++; hist[q.t]=h; save("bolsillo-hist",hist);
+  render(); stats(); chips();
+  if(Object.keys(resp).length===tanda.length) fin();
+});
+function fin(){
+  const ok=tanda.filter(q=>resp[q.i]===q.c).length;
+  $("score").textContent=`${ok} de ${tanda.length}`; $("fin").hidden=false;
+}
+function texto(){
+  const ok=tanda.filter(q=>resp[q.i]===q.c).length;
+  const t=TEMAS.find(x=>x[0]===tema)[1];
+  let s=`UdeA de Bolsillo · ${t} · ${NIVELES.find(x=>x[0]===nivel)[1]} · ${ok}/${tanda.length}\n`;
+  tanda.forEach((q,i)=>{const r=resp[q.i];
+    s+=`\nP${i+1} [${q.i}] ${r===q.c?"bien":"MAL"}: marqué ${L[r]}, era ${L[q.c]}`;
+    if(r!==q.c){s+=`\nPregunta: ${q.e.replace(/<br>/g," / ").replace(/<[^>]+>/g,"")}\nOpciones: ${q.o.map((o,j)=>L[j]+". "+o).join(" | ")}`;}
+  });
+  return s+"\n\nExplícame las que fallé como profesor y dime qué herramienta debía usar.";
+}
+function toast(t){$("toast").textContent=t;setTimeout(()=>$("toast").textContent="",3000)}
+$("copiar").addEventListener("click",()=>{
+  const t=texto(), fb=$("fallback");
+  const show=()=>{fb.value=t;fb.hidden=false;fb.focus();fb.select();toast("Selecciona y copia el texto");};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(()=>{fb.hidden=true;toast("Copiado. Pégalo en el chat de tu tutor.")}).catch(show); else show();
+});
+$("otra").addEventListener("click",nueva);
+$("nueva").addEventListener("click",nueva);
+function stats(){
+  const rows=TEMAS.filter(([k])=>k!=="*").map(([k,t])=>{const h=hist[k];return `<span>${t}</span><span>${h?`${h.ok}/${h.tot} (${Math.round(100*h.ok/h.tot)}%)`:"—"}</span>`}).join("");
+  $("stats").innerHTML=rows;
+}
+chips(); stats(); nueva();
+</script>
+</body>
+</html>
