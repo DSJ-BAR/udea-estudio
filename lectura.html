@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1D6B47">
+<title>Lectura crítica · UdeA de Bolsillo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Serif:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F6F4; --sheet:#FFFFFF; --ink:#18222B; --muted:#5A6770; --line:#D6DEDA;
+  --accent:#1D6B47; --accent-soft:#E2F0E8; --bad:#A63A2E; --bad-soft:#F7E4E1; --flag:#9A5B12; --flag-soft:#F7EBDA;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"IBM Plex Serif",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#10161B; --sheet:#182128; --ink:#E4EBE8; --muted:#95A3AB; --line:#2B3740;
+    --accent:#5DBE8C; --accent-soft:#1D3329; --bad:#F08A7C; --bad-soft:#3A201C; --flag:#E0A55A; --flag-soft:#3A2C1A; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;padding:20px 16px 64px}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.nav{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.nav a{padding:8px 12px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;border-bottom:3px solid transparent;margin-bottom:-1px}
+.nav a[aria-current="page"]{color:var(--accent);border-bottom-color:var(--accent)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:26px;line-height:1.2;margin:4px 0 0;text-wrap:balance}
+h2{font-size:19px;margin:0;line-height:1.3}
+.lead{color:var(--muted);margin:6px 0 0;font-size:15px}
+.panel{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.lbl{font-size:13px;font-weight:600;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 12px;font:14px var(--sans);cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.btn{border:0;border-radius:8px;padding:12px 18px;font:600 15px var(--sans);cursor:pointer;background:var(--accent);color:var(--sheet);text-decoration:none;display:inline-block;text-align:center}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.note{font-size:13px;color:var(--flag);background:var(--flag-soft);border-radius:8px;padding:10px 12px}
+.tema{color:var(--muted);font-size:15px;margin:0}
+/* hoja de respuestas */
+.sheet{display:grid;gap:6px}
+.line{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:start;padding:6px 0;border-top:1px solid var(--line)}
+.line:first-child{border-top:0}
+.num{font-family:var(--mono);font-weight:600;color:var(--muted);padding-top:6px;text-align:right}
+.bubbles{display:flex;gap:10px}
+.bub{width:38px;height:38px;border-radius:50%;border:2px solid var(--muted);background:transparent;color:var(--muted);font:600 14px var(--mono);cursor:pointer;display:grid;place-items:center}
+.bub[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.bub.right{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
+.bub.wrong{background:var(--bad);border-color:var(--bad);color:var(--sheet)}
+.bub:disabled{cursor:default}
+.fb{border-radius:8px;padding:10px 12px;font-size:15px;display:flex;flex-direction:column;gap:4px;margin-top:8px;grid-column:2}
+.fb.ok{background:var(--accent-soft)} .fb.bad{background:var(--bad-soft)}
+.trap{color:var(--flag);font-weight:600}
+.disc{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--flag)}
+.score{font-family:var(--mono);font-size:22px;font-weight:600}
+/* textos de práctica */
+.reading{font-family:var(--serif);font-size:17px;line-height:1.7;display:flex;flex-direction:column;gap:12px}
+.reading p{margin:0}
+.reading .pn{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:600;margin-right:6px}
+.q{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.stem{margin:0;font-size:16px;font-weight:500}
+.opts{display:grid;gap:8px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit;color:var(--ink);cursor:pointer}
+.opt .bubble{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--muted);display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:13px;color:var(--muted)}
+.opt[aria-pressed="true"]{border-color:var(--ink)} .opt[aria-pressed="true"] .bubble{background:var(--ink);border-color:var(--ink);color:var(--sheet)}
+.opt.right{border-color:var(--accent);background:var(--accent-soft)} .opt.right .bubble{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)} .opt.wrong .bubble{background:var(--bad);border-color:var(--bad);color:var(--sheet)}
+.opt:disabled{cursor:default}
+.q .fb{grid-column:auto;margin-top:0}
+textarea{width:100%;min-height:120px;font:13px var(--mono);border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);color:var(--ink)}
+.chip:focus-visible,.btn:focus-visible,.bub:focus-visible,.opt:focus-visible,.nav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav"><a href="./">Razonamiento</a><a href="lectura.html" aria-current="page">Lectura crítica</a></nav>
+  <header>
+    <span class="eyebrow">Competencia lectora · examen UdeA</span>
+    <h1>Lectura crítica</h1>
+    <p class="lead">Leé el texto completo, marcá tus respuestas sin ayuda y calificá al final. Ahí ves cuál era, por qué y cuál era la trampa.</p>
+  </header>
+
+  <section class="panel">
+    <span class="lbl">¿Qué querés practicar?</span>
+    <div class="chips" id="modo">
+      <button type="button" class="chip" data-m="practica" aria-pressed="true">Textos para leer aquí</button>
+      <button type="button" class="chip" data-m="examenes" aria-pressed="false">Exámenes reales</button>
+    </div>
+  </section>
+
+  <!-- PRÁCTICA -->
+  <div id="v-practica" class="wrap">
+    <section class="panel">
+      <span class="lbl">Escogé un texto</span>
+      <div class="chips" id="textos"></div>
+      <p class="tema">Textos escritos para practicar, con la misma estructura, largo y tipo de preguntas del examen.</p>
+    </section>
+    <section class="panel" id="lectura"></section>
+  </div>
+
+  <!-- EXÁMENES -->
+  <div id="v-examenes" class="wrap" hidden>
+    <section class="panel">
+      <span class="lbl">Escogé el examen</span>
+      <div class="chips" id="exams"></div>
+      <p class="note">El texto se lee en el PDF oficial (se abre en la página exacta). Las claves y explicaciones las hizo Claude resolviendo el examen: no son la clave oficial. Las que dicen «clave discutible» tienen dos opciones defendibles.</p>
+    </section>
+    <div id="bloques" class="wrap"></div>
+  </div>
+
+  <section class="panel" id="fin" hidden>
+    <span class="lbl" id="fin-t">Resultado</span>
+    <span class="score" id="score"></span>
+    <div class="row"><button class="btn" id="copiar" type="button">Copiar para mi tutor</button><span class="lbl" id="toast" aria-live="polite"></span></div>
+    <textarea id="fallback" hidden readonly></textarea>
+  </section>
+</div>
+
+<script src="lectura.js"></script>
+<script>
+const $=id=>document.getElementById(id), L="ABCD";
+function load(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let st=load("lectura-v1",{modo:"practica",texto:PRACTICA[0].id,examen:EXAMENES[0].id,r:{},cal:{}});
+st.r=st.r||{}; st.cal=st.cal||{};
+let copiable="";
+const persist=()=>save("lectura-v1",st);
+
+/* ---------- modo ---------- */
+function modo(){
+  document.querySelectorAll("#modo .chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===st.modo));
+  $("v-practica").hidden=st.modo!=="practica"; $("v-examenes").hidden=st.modo!=="examenes";
+  $("fin").hidden=true;
+  st.modo==="practica"?practica():examenes();
+}
+$("modo").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(b){st.modo=b.dataset.m;persist();modo();}});
+
+/* ---------- práctica ---------- */
+function practica(){
+  $("textos").innerHTML=PRACTICA.map(t=>{const k="p:"+t.id;return `<button type="button" class="chip" data-t="${t.id}" aria-pressed="${st.texto===t.id}">${t.titulo}${st.cal[k]?" ✓":""}</button>`}).join("");
+  const t=PRACTICA.find(x=>x.id===st.texto)||PRACTICA[0], k="p:"+t.id, r=st.r[k]||{}, cal=st.cal[k];
+  const pars=t.parrafos.map((p,i)=>`<p><span class="pn">${i+1}.</span>${p}</p>`).join("");
+  const qs=t.preguntas.map((q,i)=>{
+    const opts=q.o.map((o,j)=>{let c="";if(cal){if(j===q.c)c=" right";else if(r[i]===j)c=" wrong";}
+      return `<button type="button" class="opt${c}" data-i="${i}" data-j="${j}" aria-pressed="${r[i]===j}" ${cal?"disabled":""}><span class="bubble">${L[j]}</span><span>${o}</span></button>`}).join("");
+    const fb=cal?`<div class="fb ${r[i]===q.c?"ok":"bad"}"><b>${r[i]===q.c?"Correcta":(r[i]===undefined?"Sin responder.":"Incorrecta.")+" Era la "+L[q.c]}</b><span>${q.x}</span>${q.tr?`<span class="trap">Trampa: ${q.tr}</span>`:""}</div>`:"";
+    return `<div class="q"><p class="stem">${i+1}. ${q.e}</p><div class="opts">${opts}</div>${fb}</div>`}).join("");
+  const n=Object.keys(r).length, tot=t.preguntas.length;
+  $("lectura").innerHTML=`<span class="eyebrow">${t.tipo}</span><h2>${t.titulo}</h2><div class="reading">${pars}</div>${qs}
+    <div class="row">${cal?`<button class="btn ghost" id="rep" type="button">Hacerlo otra vez</button>`:`<button class="btn" id="calp" type="button" ${n<tot?"disabled":""}>Calificar</button><span class="lbl">${n} de ${tot} respondidas</span>`}</div>`;
+  if(cal) finPractica(t,r);
+}
+$("textos").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(b){st.texto=b.dataset.t;persist();$("fin").hidden=true;practica();window.scrollTo({top:$("lectura").offsetTop-10});}});
+$("lectura").addEventListener("click",e=>{
+  const t=PRACTICA.find(x=>x.id===st.texto), k="p:"+t.id;
+  const o=e.target.closest(".opt");
+  if(o&&!o.disabled){(st.r[k]=st.r[k]||{})[o.dataset.i]=+o.dataset.j;persist();const y=window.scrollY;practica();window.scrollTo(0,y);return;}
+  if(e.target.id==="calp"){st.cal[k]=1;persist();practica();window.scrollTo({top:$("lectura").offsetTop-10,behavior:"smooth"});}
+  if(e.target.id==="rep"){delete st.r[k];delete st.cal[k];persist();$("fin").hidden=true;practica();window.scrollTo({top:$("lectura").offsetTop-10});}
+});
+function finPractica(t,r){
+  const ok=t.preguntas.filter((q,i)=>r[i]===q.c).length;
+  $("fin-t").textContent=`Resultado · ${t.titulo}`; $("score").textContent=`${ok} de ${t.preguntas.length}`; $("fin").hidden=false;
+  let s=`UdeA de Bolsillo · Lectura · ${t.titulo} · ${ok}/${t.preguntas.length}\n`;
+  t.preguntas.forEach((q,i)=>{if(r[i]!==q.c)s+=`\nP${i+1}: marqué ${r[i]===undefined?"nada":L[r[i]]}, era ${L[q.c]}. Pregunta: ${q.e}`;});
+  copiable=s+"\n\nTe explico en qué me basé en las que fallé; ayúdame a ver dónde se torció el razonamiento.";
+}
+
+/* ---------- exámenes ---------- */
+function examenes(){
+  $("exams").innerHTML=EXAMENES.map(x=>`<button type="button" class="chip" data-x="${x.id}" aria-pressed="${st.examen===x.id}">${x.nombre}</button>`).join("");
+  const x=EXAMENES.find(z=>z.id===st.examen)||EXAMENES[0];
+  $("bloques").innerHTML=x.bloques.map((b,bi)=>{
+    const k=`x:${x.id}:${bi}`, r=st.r[k]||{}, cal=st.cal[k];
+    let lines="";
+    for(let n=b.desde;n<=b.hasta;n++){
+      const [c,expl,trap,disc]=x.q[n], ci=L.indexOf(c);
+      const bubs=[0,1,2,3].map(j=>{let cl="";if(cal){if(j===ci)cl=" right";else if(r[n]===j)cl=" wrong";}
+        return `<button type="button" class="bub${cl}" data-b="${bi}" data-n="${n}" data-j="${j}" aria-pressed="${r[n]===j}" aria-label="Pregunta ${n}, opción ${L[j]}" ${cal?"disabled":""}>${L[j]}</button>`}).join("");
+      const fb=cal?`<div class="fb ${r[n]===ci?"ok":"bad"}">${disc?`<span class="disc">Clave discutible</span>`:""}<b>${r[n]===ci?"Correcta":(r[n]===undefined?"Sin responder.":"Incorrecta.")+" Era la "+c}</b><span>${expl}</span>${trap?`<span class="trap">Trampa: ${trap}</span>`:""}</div>`:"";
+      lines+=`<div class="line"><span class="num">${n}</span><div><div class="bubbles">${bubs}</div>${fb}</div></div>`;
+    }
+    const nr=Object.keys(r).length, tot=b.hasta-b.desde+1;
+    const ok=cal?Object.keys(x.q).filter(n=>n>=b.desde&&n<=b.hasta&&r[n]===L.indexOf(x.q[n][0])).length:0;
+    return `<section class="panel" id="b-${bi}"><span class="eyebrow">${x.nombre} · preguntas ${b.desde} a ${b.hasta}</span><h2>${b.titulo}</h2><p class="tema">${b.tema}</p>
+      <a class="btn ghost" href="${x.pdf}#page=${b.pagina}" target="_blank" rel="noopener">Abrir el texto en el PDF (pág. ${b.pagina})</a>
+      <div class="sheet">${lines}</div>
+      <div class="row">${cal?`<span class="score">${ok} de ${tot}</span><button class="btn" type="button" data-copy="${bi}">Copiar para mi tutor</button><button class="btn ghost" type="button" data-rep="${bi}">Hacerlo otra vez</button>`:`<button class="btn" type="button" data-cal="${bi}" ${nr<tot?"disabled":""}>Calificar</button><span class="lbl">${nr} de ${tot} marcadas</span>`}</div></section>`;
+  }).join("");
+}
+$("exams").addEventListener("click",e=>{const b=e.target.closest("[data-x]");if(b){st.examen=b.dataset.x;persist();examenes();}});
+$("bloques").addEventListener("click",e=>{
+  const x=EXAMENES.find(z=>z.id===st.examen);
+  const b=e.target.closest(".bub");
+  if(b&&!b.disabled){const k=`x:${x.id}:${b.dataset.b}`;(st.r[k]=st.r[k]||{})[b.dataset.n]=+b.dataset.j;persist();const y=window.scrollY;examenes();window.scrollTo(0,y);return;}
+  const c=e.target.closest("[data-cal]");
+  if(c){const bi=c.dataset.cal;st.cal[`x:${x.id}:${bi}`]=1;persist();examenes();$("b-"+bi).scrollIntoView({behavior:"smooth"});return;}
+  const rp=e.target.closest("[data-rep]");
+  if(rp){const k=`x:${x.id}:${rp.dataset.rep}`;delete st.r[k];delete st.cal[k];persist();examenes();return;}
+  const cp=e.target.closest("[data-copy]");
+  if(cp){const bi=+cp.dataset.copy, bl=x.bloques[bi], r=st.r[`x:${x.id}:${bi}`]||{};
+    let ok=0,s="";
+    for(let n=bl.desde;n<=bl.hasta;n++){const ci=L.indexOf(x.q[n][0]);if(r[n]===ci)ok++;else s+=`\nP${n}: marqué ${r[n]===undefined?"nada":L[r[n]]}, la clave dice ${x.q[n][0]}${x.q[n][3]?" (clave discutible)":""}`;}
+    copiable=`UdeA de Bolsillo · ${x.nombre} · ${bl.titulo} (preguntas ${bl.desde}-${bl.hasta}) · ${ok}/${bl.hasta-bl.desde+1}\n${s}\n\nTe explico en qué me basé en las que fallé; revísame el razonamiento.`;
+    copiar();}
+});
+
+/* ---------- copiar ---------- */
+function toast(t){$("toast").textContent=t;setTimeout(()=>$("toast").textContent="",3000)}
+function copiar(){
+  const fb=$("fallback");
+  const show=()=>{$("fin").hidden=false;$("fin-t").textContent="Copiá este texto";$("score").textContent="";fb.value=copiable;fb.hidden=false;fb.focus();fb.select();};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(copiable).then(()=>{if(st.modo==="examenes"){alert("Copiado. Pegalo en el chat de tu tutor.")}else{fb.hidden=true;toast("Copiado. Pegalo en el chat de tu tutor.")}}).catch(show); else show();
+}
+$("copiar").addEventListener("click",copiar);
+
+modo();
+</script>
+</body>
+</html>
