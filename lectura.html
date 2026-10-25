@@ -74,6 +74,9 @@ h2{font-size:19px;margin:0;line-height:1.3}
 .opt:disabled{cursor:default}
 .q .fb{grid-column:auto;margin-top:0}
 textarea{width:100%;min-height:120px;font:13px var(--mono);border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);color:var(--ink)}
+.q textarea.why{min-height:64px;font:15px/1.5 var(--sans)}
+.aviso{font-size:13px;font-weight:600;color:var(--flag)}
+.sendbar{position:sticky;bottom:10px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .chip:focus-visible,.btn:focus-visible,.bub:focus-visible,.opt:focus-visible,.nav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
 </style>
@@ -129,7 +132,11 @@ const $=id=>document.getElementById(id), L="ABCD";
 function load(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 let st=load("lectura-v1",{modo:"practica",texto:PRACTICA[0].id,examen:EXAMENES[0].id,r:{},cal:{}});
-st.r=st.r||{}; st.cal=st.cal||{};
+st.r=st.r||{}; st.cal=st.cal||{}; st.w=st.w||{};
+const MINP=4;
+const palabras=s=>(s||"").trim().split(/\s+/).filter(Boolean).length;
+const escH=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const avisoTxt=(l,w)=>(l!==undefined||palabras(w)>0)&&palabras(w)<MINP?`Falta explicar cómo la resolviste o por qué no pudiste (mínimo ${MINP} palabras). Así cuenta como mala.`:"";
 let copiable="";
 const persist=()=>save("lectura-v1",st);
 
@@ -145,16 +152,17 @@ $("modo").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(b
 /* ---------- práctica ---------- */
 function practica(){
   $("textos").innerHTML=PRACTICA.map(t=>{const k="p:"+t.id;return `<button type="button" class="chip" data-t="${t.id}" aria-pressed="${st.texto===t.id}">${t.titulo}${st.cal[k]?" ✓":""}</button>`}).join("");
-  const t=PRACTICA.find(x=>x.id===st.texto)||PRACTICA[0], k="p:"+t.id, r=st.r[k]||{}, cal=st.cal[k];
+  const t=PRACTICA.find(x=>x.id===st.texto)||PRACTICA[0], k="p:"+t.id, r=st.r[k]||{}, cal=st.cal[k], w=st.w[k]||{};
   const pars=t.parrafos.map((p,i)=>`<p><span class="pn">${i+1}.</span>${p}</p>`).join("");
   const qs=t.preguntas.map((q,i)=>{
     const opts=q.o.map((o,j)=>{let c="";if(cal){if(j===q.c)c=" right";else if(r[i]===j)c=" wrong";}
       return `<button type="button" class="opt${c}" data-i="${i}" data-j="${j}" aria-pressed="${r[i]===j}" ${cal?"disabled":""}><span class="bubble">${L[j]}</span><span>${o}</span></button>`}).join("");
     const fb=cal?`<div class="fb ${r[i]===q.c?"ok":"bad"}"><b>${r[i]===q.c?"Correcta":(r[i]===undefined?"Sin responder.":"Incorrecta.")+" Era la "+L[q.c]}</b><span>${q.x}</span>${q.tr?`<span class="trap">Trampa: ${q.tr}</span>`:""}</div>`:"";
-    return `<div class="q"><p class="stem">${i+1}. ${q.e}</p><div class="opts">${opts}</div>${fb}</div>`}).join("");
+    return `<div class="q"><p class="stem">${i+1}. ${q.e}</p><div class="opts">${opts}</div><textarea class="why" data-i="${i}" placeholder="Obligatorio: cómo la resolviste (qué frase del texto te la dio) o por qué no pudiste">${escH(w[i]||"")}</textarea><span class="aviso" id="avp-${i}" aria-live="polite">${avisoTxt(r[i],w[i])}</span>${fb}</div>`}).join("");
   const n=Object.keys(r).length, tot=t.preguntas.length;
   $("lectura").innerHTML=`<span class="eyebrow">${t.tipo}</span><h2>${t.titulo}</h2><div class="reading">${pars}</div>${qs}
-    <div class="row">${cal?`<button class="btn ghost" id="rep" type="button">Hacerlo otra vez</button>`:`<button class="btn" id="calp" type="button" ${n<tot?"disabled":""}>Calificar</button><span class="lbl">${n} de ${tot} respondidas</span>`}</div>`;
+    <div class="row">${cal?`<button class="btn ghost" id="rep" type="button">Hacerlo otra vez</button>`:`<button class="btn" id="calp" type="button" ${n<tot?"disabled":""}>Calificar</button><span class="lbl">${n} de ${tot} respondidas</span>`}</div>
+    <div class="sendbar"><div class="row"><button type="button" class="btn" id="sendp">Enviar a Claude (${tocadas(t).length} de ${tot})</button><button type="button" class="btn ghost" id="copyp">Copiar</button></div><span class="lbl" id="msgp" aria-live="polite"></span><textarea id="fbp" hidden readonly></textarea></div>`;
   if(cal) finPractica(t,r);
 }
 $("textos").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(b){st.texto=b.dataset.t;persist();$("fin").hidden=true;practica();window.scrollTo({top:$("lectura").offsetTop-10});}});
@@ -163,8 +171,37 @@ $("lectura").addEventListener("click",e=>{
   const o=e.target.closest(".opt");
   if(o&&!o.disabled){(st.r[k]=st.r[k]||{})[o.dataset.i]=+o.dataset.j;persist();const y=window.scrollY;practica();window.scrollTo(0,y);return;}
   if(e.target.id==="calp"){st.cal[k]=1;persist();practica();window.scrollTo({top:$("lectura").offsetTop-10,behavior:"smooth"});}
-  if(e.target.id==="rep"){delete st.r[k];delete st.cal[k];persist();$("fin").hidden=true;practica();window.scrollTo({top:$("lectura").offsetTop-10});}
+  if(e.target.id==="rep"){delete st.r[k];delete st.cal[k];delete st.w[k];persist();$("fin").hidden=true;practica();window.scrollTo({top:$("lectura").offsetTop-10});}
+  if(e.target.id==="sendp") enviarP(t,true);
+  if(e.target.id==="copyp") enviarP(t,false);
 });
+$("lectura").addEventListener("input",e=>{
+  if(!e.target.matches("textarea.why")) return;
+  const t=PRACTICA.find(x=>x.id===st.texto), k="p:"+t.id, i=+e.target.dataset.i;
+  (st.w[k]=st.w[k]||{})[i]=e.target.value; persist();
+  $("avp-"+i).textContent=avisoTxt((st.r[k]||{})[i],e.target.value);
+  $("sendp").textContent=`Enviar a Claude (${tocadas(t).length} de ${t.preguntas.length})`;
+});
+function tocadas(t){const k="p:"+t.id,r=st.r[k]||{},w=st.w[k]||{};return t.preguntas.map((q,i)=>i).filter(i=>r[i]!==undefined||palabras(w[i])>0);}
+function mensajeP(t){
+  const k="p:"+t.id, r=st.r[k]||{}, w=st.w[k]||{}, cal=st.cal[k], idx=tocadas(t);
+  if(!idx.length) return null;
+  let m="Soy Juan y me preparo para el examen de admisión de la Universidad de Antioquia (prueba de Competencia Lectora). Eres mi tutor. Califica mis respuestas: en cada una dime primero si está BIEN o MAL, cuál es la correcta citando la frase del texto que la prueba, por qué caen las otras opciones y qué trampa usaron. Revisa también mi explicación: dime si mi razonamiento estuvo bien aunque la letra esté mal, o si acerté por suerte. REGLA OBLIGATORIA: si una pregunta dice SIN EXPLICACIÓN, cuéntala MALA aunque la letra sea la correcta. Si alguna te deja una duda real entre dos opciones, dilo. Sé directo y breve, en español, sin emojis. Al final dame mi puntaje y el tipo de pregunta que más fallé.\n\n";
+  m+=`TEXTO DE PRÁCTICA · ${t.titulo} (${t.tipo})\n${t.parrafos.map((p,i)=>`${i+1}. ${p}`).join("\n")}\n\nMIS RESPUESTAS\n`;
+  idx.forEach(i=>{const q=t.preguntas[i];
+    m+=`\n${i+1}. ${q.e}\n${q.o.map((o,j)=>`${L[j]}. ${o}`).join("\n")}\nMi respuesta: ${r[i]!==undefined?L[r[i]]:"no marqué ninguna"}\nCómo lo resolví / por qué no pude: ${(w[i]||"").trim()||"(no escribí)"}\n${palabras(w[i])<MINP?"SIN EXPLICACIÓN: CUENTA COMO MALA\n":""}${cal?`La app ya me calificó: ${r[i]===q.c?"correcta":"incorrecta, era la "+L[q.c]}\n`:""}`;});
+  return m;
+}
+function enviarP(t,share){
+  const m=mensajeP(t), msg=$("msgp"), fb=$("fbp");
+  if(!m){msg.textContent="Primero responde al menos una pregunta.";return;}
+  const copiarP=()=>{
+    const show=()=>{fb.value=m;fb.hidden=false;fb.focus();fb.select();msg.textContent="Selecciona todo, copia y pégalo en el chat de Claude.";};
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(m).then(()=>{fb.hidden=true;msg.textContent="Copiado. Abre Claude y pégalo en un chat.";}).catch(show); else show();
+  };
+  if(share&&navigator.share){navigator.share({text:m}).then(()=>{msg.textContent="Enviado. Mira la respuesta en Claude.";}).catch(err=>{if(err&&err.name==="AbortError")msg.textContent="";else copiarP();});}
+  else copiarP();
+}
 function finPractica(t,r){
   const ok=t.preguntas.filter((q,i)=>r[i]===q.c).length;
   $("fin-t").textContent=`Resultado · ${t.titulo}`; $("score").textContent=`${ok} de ${t.preguntas.length}`; $("fin").hidden=false;
