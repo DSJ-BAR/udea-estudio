@@ -78,6 +78,9 @@ details.texto .colimg img{display:block;max-width:none;height:auto}
 details.texto .fuente a{color:var(--accent);font-weight:600}
 details.texto .falta{color:var(--flag);font-weight:600}
 .aviso{font-size:13px;font-weight:600;color:var(--flag)}
+.qimg{display:block;max-width:100%;height:auto;border-radius:6px;background:#fff}
+.bloque{display:flex;flex-direction:column;gap:6px}
+.opt .qimg{max-height:120px;width:auto}
 .sendbar{position:sticky;bottom:10px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
 </style>
 </head>
@@ -146,6 +149,7 @@ details.texto .falta{color:var(--flag);font-weight:600}
 <script src="bank.js"></script>
 <script src="lectura-textos.js"></script>
 <script src="razona-simulacro.js"></script>
+<script src="razona-logica.js"></script>
 <script>
 const TEMAS=[["R","Orden y reglas"],["C","Condicionales"],["O","Operaciones"],["P","Patrones"],["N","Números"],["K","Conteo"],["V","Conjuntos"],["A","Aritmética"],["*","Todos"]];
 const NIVELES=[["3","Nivel UdeA"],["2","Medio"],["1","Fácil"],["*","Todos"]];
@@ -256,15 +260,16 @@ function textoHTML(t,abierto){
 function render(){
   const e=ex();
   $("exs").innerHTML=LECTURA.map(x=>{const r=Object.keys(R[x.id]||{}).filter(n=>(R[x.id][n].l!==undefined)).length;return `<button type="button" class="chip" data-ex="${x.id}" aria-pressed="${x.id===exId}">${esc(x.titulo)}<small>${r}/40</small></button>`}).join("");
-  $("exinfo").textContent=e.id==="razona-sim"?"2 textos y 40 preguntas del simulacro gratuito de Razona.":"2 textos y 40 preguntas reales del cuadernillo.";
+  $("exinfo").textContent=e.tipo==="logica"?"Preguntas 41 a 80 del simulacro de Razona. Sin calculadora: haz las cuentas en papel.":e.id==="razona-sim"?"2 textos y 40 preguntas del simulacro gratuito de Razona.":"2 textos y 40 preguntas reales del cuadernillo.";
   let h="";
   e.grupos.forEach((g,gi)=>{
     h+=`<section class="grupo wrap"><h2 class="gtitle">${esc(g.nombre)}</h2>`;
     if(g.textos.length===1) h+=textoHTML(e.textos[g.textos[0]],false);
-    else h+=`<p class="lead">Estas preguntas usan los dos textos. Puedes abrirlos aquí:</p>`+g.textos.map(i=>textoHTML(e.textos[i],false)).join("");
+    else if(g.textos.length>1) h+=`<p class="lead">Estas preguntas usan los dos textos. Puedes abrirlos aquí:</p>`+g.textos.map(i=>textoHTML(e.textos[i],false)).join("");
     g.preguntas.forEach(q=>{
       const s=st(q.n);
-      h+=`<section class="q qr" id="lq-${q.n}"><div class="qhead"><span>Pregunta ${q.n}</span><span>${esc(e.titulo)}</span></div><p class="stem">${esc(q.e).replace(/EXCEPTO/g,"<em>EXCEPTO</em>")}</p><div class="opts">${q.o.map((o,j)=>`<button type="button" class="opt${s.l===j?" sel":""}" data-n="${q.n}" data-j="${j}"><span class="bubble">${L[j]}</span><span>${esc(o)}</span></button>`).join("")}</div><textarea data-n="${q.n}" placeholder="Obligatorio: cómo la resolviste (qué frase del texto te la dio) o por qué no pudiste">${esc(s.why||"")}</textarea><span class="aviso" id="av-${q.n}" aria-live="polite">${avisoTxt(s)}</span><div class="chips">${SEG.map(([v,t])=>`<button type="button" class="chip seg" data-n="${q.n}" data-s="${v}" aria-pressed="${s.seg===v}">${t}</button>`).join("")}</div></section>`;
+      if(q.bloque&&q.bloque.length) h+=`<section class="panel bloque"><span class="lbl">Información para las preguntas que siguen</span>${q.bloque.map(u=>`<img class="qimg" src="${esc(u)}" alt="Información de apoyo">`).join("")}</section>`;
+      h+=`<section class="q qr" id="lq-${q.n}"><div class="qhead"><span>Pregunta ${q.n}</span><span>${esc(e.titulo)}</span></div>${q.e?`<p class="stem">${esc(q.e).replace(/EXCEPTO/g,"<em>EXCEPTO</em>")}</p>`:""}${(q.img||[]).map(u=>`<img class="qimg" src="${esc(u)}" alt="Enunciado de la pregunta ${q.n}">`).join("")}<div class="opts">${q.o.map((o,j)=>`<button type="button" class="opt${s.l===j?" sel":""}" data-n="${q.n}" data-j="${j}"><span class="bubble">${L[j]}</span><span>${typeof o==="string"?esc(o):(o.t?esc(o.t)+" ":"")+(o.img?`<img class="qimg" src="${esc(o.img)}" alt="Opción ${L[j]}">`:"")}</span></button>`).join("")}</div><textarea data-n="${q.n}" placeholder="${e.tipo==="logica"?"Obligatorio: cómo la resolviste (qué cuentas o qué razonamiento hiciste) o por qué no pudiste":"Obligatorio: cómo la resolviste (qué frase del texto te la dio) o por qué no pudiste"}">${esc(s.why||"")}</textarea><span class="aviso" id="av-${q.n}" aria-live="polite">${avisoTxt(s)}</span><div class="chips">${SEG.map(([v,t])=>`<button type="button" class="chip seg" data-n="${q.n}" data-s="${v}" aria-pressed="${s.seg===v}">${t}</button>`).join("")}</div></section>`;
     });
     const nr=g.preguntas.filter(q=>tocada(st(q.n))).length;
     h+=`<div class="sendbar"><div class="row"><button type="button" class="btn" data-send="${gi}">Enviar a Claude (${nr} de ${g.preguntas.length})</button><button type="button" class="btn ghost" data-copy="${gi}">Copiar</button></div><span class="lbl" id="msg-${gi}" aria-live="polite"></span><textarea id="fb-${gi}" hidden readonly></textarea></div></section>`;
@@ -294,6 +299,14 @@ function mensaje(gi){
   const e=ex(), g=e.grupos[gi];
   const qs=g.preguntas.filter(q=>tocada(st(q.n)));
   if(!qs.length) return null;
+  if(e.tipo==="logica"){
+    let m="Soy Juan y me preparo para el examen de admisión de la Universidad de Antioquia (prueba de Razonamiento Lógico). Eres mi tutor. Califica mis respuestas: en cada una dime primero si está BIEN o MAL, cuál es la correcta y cómo se resuelve paso a paso con números pequeños, sin fórmulas raras. Revisa también mi explicación: dime si mi razonamiento estuvo bien aunque la letra esté mal, o si acerté por suerte. REGLA OBLIGATORIA: si una pregunta dice SIN EXPLICACIÓN, cuéntala MALA aunque la letra sea la correcta. Sé directo y breve, en español, sin emojis. Al final dame mi puntaje y el tema que más fallé. Las preguntas con foto están en la app UdeA de Bolsillo (carpeta razona/logica); si no las tienes, pídeme captura.\n\n";
+    m+=`SIMULACRO RAZONA UdeA · ${g.nombre}\n\nMIS RESPUESTAS\n`;
+    qs.forEach(q=>{const s=st(q.n);const segT=(SEG.find(x=>x[0]===s.seg)||[0,"sin decir"])[1];
+      const fotos=[...(q.bloque||[]),...(q.img||[])];
+      m+=`\n${q.n}. ${q.e||"(enunciado en foto)"}${fotos.length?"\n[foto: "+fotos.join(", ")+"]":""}\n${q.o.map((o,j)=>`${L[j]}. ${typeof o==="string"?o:(o.t||"")+(o.img?" [foto: "+o.img+"]":"")}`).join("\n")}\nMi respuesta: ${s.l!==undefined?L[s.l]+" ("+segT+")":"no marqué ninguna"}\nCómo lo resolví / por qué no pude: ${(s.why||"").trim()||"(no escribí)"}\n${okWhy(s)?"":"SIN EXPLICACIÓN: CUENTA COMO MALA\n"}`;});
+    return m;
+  }
   let m="Soy Juan y me preparo para el examen de admisión de la Universidad de Antioquia (prueba de Competencia Lectora). Eres mi tutor. Califica mis respuestas: en cada una dime primero si está BIEN o MAL, cuál es la correcta citando la frase del texto que la prueba, por qué caen las otras opciones y qué trampa usaron. Revisa también mi explicación: dime si mi razonamiento estuvo bien aunque la letra esté mal, o si acerté por suerte. REGLA OBLIGATORIA: si una pregunta dice SIN EXPLICACIÓN, cuéntala MALA aunque la letra sea la correcta. Si alguna te deja una duda real entre dos opciones, dilo. Sé directo y breve, en español, sin emojis. Al final dame mi puntaje y el tipo de pregunta que más fallé.\n\n";
   m+=`${e.id==="razona-sim"?"SIMULACRO RAZONA UdeA":"EXAMEN UdeA "+e.id} · ${g.nombre}\n`;
   g.textos.forEach(i=>{const t=e.textos[i];m+=t.parrafos.length?`\n${t.nombre.toUpperCase()}\n${t.parrafos.map((p,k)=>`${k+1}. ${p}`).join("\n")}\n${t.fuente?"("+t.fuente+")\n":""}`:`\n${t.nombre.toUpperCase()}: está en foto en el simulacro de Razona. Si no lo tienes, pídemelo.\n`;});
