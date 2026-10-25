@@ -58,22 +58,49 @@ h1{font-size:26px;line-height:1.2;margin:4px 0 0;text-wrap:balance}
 .pdfs a{color:var(--accent);font-weight:600;text-decoration:none}
 textarea{width:100%;min-height:120px;font:13px var(--mono);border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);color:var(--ink)}
 .opt:focus-visible,.chip:focus-visible,.btn:focus-visible,.pdfs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.nav{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:4px}
-.nav a{padding:8px 12px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;border-bottom:3px solid transparent;margin-bottom:-1px}
-.nav a[aria-current="page"]{color:var(--accent);border-bottom-color:var(--accent)}
-.nav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:5px}
+.tab{border:0;border-radius:7px;padding:10px;font:600 15px var(--sans);background:transparent;color:var(--muted);cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--sheet)}
+details.texto{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+details.texto summary{font-weight:600;cursor:pointer;color:var(--accent)}
+details.texto p{margin:10px 0;font-size:16px;line-height:1.65}
+details.texto .num{font-family:var(--mono);font-weight:600;color:var(--muted);margin-right:6px}
+details.texto .fuente{font-size:13px;color:var(--muted)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)} .opt.sel .bubble{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
+.qr textarea{min-height:64px;font:15px/1.5 var(--sans)}
+.gtitle{font-size:18px;margin:6px 0 0}
+#lect{display:flex;flex-direction:column;gap:28px}
+.grupo{gap:14px}
+.chip.seg[aria-pressed="true"]{border-color:var(--flag);background:var(--flag-soft);color:var(--flag)}
+.sendbar{position:sticky;bottom:10px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <nav class="nav"><a href="./" aria-current="page">Razonamiento</a><a href="lectura.html">Lectura crítica</a></nav>
   <header>
-    <span class="eyebrow">Razonamiento lógico · examen UdeA · práctica en el celular</span>
+    <span class="eyebrow">Examen de admisión UdeA · práctica en el celular</span>
     <h1>UdeA de Bolsillo</h1>
-    <p class="lead">Escoge tema y nivel, resuelve la tanda y la app te corrige al instante con la solución y la trampa. Lo que falles lo copias y se lo pegas a tu tutor en Claude para que te lo explique.</p>
   </header>
 
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-logica" aria-selected="true" type="button">Lógica</button>
+    <button class="tab" role="tab" id="tab-lectura" aria-selected="false" type="button">Lectura crítica</button>
+  </div>
+
+  <div id="vista-lectura" class="wrap" hidden>
+    <p class="lead">Escoge un examen, lee el texto, responde y escribe la frase del texto que te dio la respuesta. Al final toca <b>Enviar a Claude</b>: se abre el menú de compartir del celular, escoges la app de Claude y él te califica. Aquí no hay respuestas.</p>
+    <p class="lead">¿Prefieres que te corrija al instante? Abre <a href="lectura.html" style="color:var(--accent);font-weight:600">las hojas de respuestas y los textos de práctica</a>.</p>
+    <section class="panel">
+      <span class="lbl">Examen</span>
+      <div class="chips" id="exs"></div>
+      <span class="lbl" id="exinfo"></span>
+    </section>
+    <div id="lect"></div>
+  </div>
+
+  <div id="vista-logica" class="wrap">
+  <p class="lead">Escoge tema y nivel, resuelve la tanda y la app te corrige al instante con la solución y la trampa. Lo que falles lo copias y se lo pegas a tu tutor en Claude para que te lo explique.</p>
   <section class="panel" id="config">
     <span class="lbl">Tema</span>
     <div class="chips" id="temas"></div>
@@ -108,9 +135,11 @@ textarea{width:100%;min-height:120px;font:13px var(--mono);border:1px solid var(
       <li><a href="examenes/Guia-Examen-UdeA.pdf">Guía oficial del examen</a></li>
     </ul>
   </section>
+  </div>
 </div>
 
 <script src="bank.js"></script>
+<script src="lectura-textos.js"></script>
 <script>
 const TEMAS=[["R","Orden y reglas"],["C","Condicionales"],["O","Operaciones"],["P","Patrones"],["N","Números"],["K","Conteo"],["V","Conjuntos"],["A","Aritmética"],["*","Todos"]];
 const NIVELES=[["3","Nivel UdeA"],["2","Medio"],["1","Fácil"],["*","Todos"]];
@@ -181,6 +210,93 @@ function stats(){
   $("stats").innerHTML=rows;
 }
 chips(); stats(); nueva();
+</script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const L="ABCD";
+const SEG=[["seguro","Seguro"],["dudo","Dudo"],["adivine","Adiviné"]];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function load(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let R=load("lect-resp",{}), exId=load("lect-ex",LECTURA[0].id);
+if(!LECTURA.find(x=>x.id===exId)) exId=LECTURA[0].id;
+const ex=()=>LECTURA.find(x=>x.id===exId);
+const st=n=>((R[exId]||{})[n])||{};
+function setSt(n,patch){R[exId]=R[exId]||{};R[exId][n]=Object.assign({},st(n),patch);save("lect-resp",R);}
+
+function tabs(which){
+  $("tab-logica").setAttribute("aria-selected",which==="logica");
+  $("tab-lectura").setAttribute("aria-selected",which==="lectura");
+  $("vista-logica").hidden=which!=="logica"; $("vista-lectura").hidden=which!=="lectura";
+  save("vista",which); if(which==="lectura") render();
+}
+$("tab-logica").addEventListener("click",()=>tabs("logica"));
+$("tab-lectura").addEventListener("click",()=>tabs("lectura"));
+
+function textoHTML(t,abierto){
+  return `<details class="texto"${abierto?" open":""}><summary>Leer el ${esc(t.nombre)} (${t.parrafos.length} párrafos)</summary>${t.parrafos.map((p,i)=>`<p><span class="num">${i+1}.</span>${esc(p)}</p>`).join("")}${t.fuente?`<p class="fuente">${esc(t.fuente)}</p>`:""}</details>`;
+}
+function render(){
+  const e=ex();
+  $("exs").innerHTML=LECTURA.map(x=>{const r=Object.keys(R[x.id]||{}).filter(n=>(R[x.id][n].l!==undefined)).length;return `<button type="button" class="chip" data-ex="${x.id}" aria-pressed="${x.id===exId}">${esc(x.titulo)}<small>${r}/40</small></button>`}).join("");
+  $("exinfo").textContent="2 textos y 40 preguntas reales del cuadernillo.";
+  let h="";
+  e.grupos.forEach((g,gi)=>{
+    h+=`<section class="grupo wrap"><h2 class="gtitle">${esc(g.nombre)}</h2>`;
+    if(g.textos.length===1) h+=textoHTML(e.textos[g.textos[0]],false);
+    else h+=`<p class="lead">Estas preguntas usan los dos textos. Puedes abrirlos aquí:</p>`+g.textos.map(i=>textoHTML(e.textos[i],false)).join("");
+    g.preguntas.forEach(q=>{
+      const s=st(q.n);
+      h+=`<section class="q qr" id="lq-${q.n}"><div class="qhead"><span>Pregunta ${q.n}</span><span>${esc(e.titulo)}</span></div><p class="stem">${esc(q.e).replace(/EXCEPTO/g,"<em>EXCEPTO</em>")}</p><div class="opts">${q.o.map((o,j)=>`<button type="button" class="opt${s.l===j?" sel":""}" data-n="${q.n}" data-j="${j}"><span class="bubble">${L[j]}</span><span>${esc(o)}</span></button>`).join("")}</div><textarea data-n="${q.n}" placeholder="La frase del texto que te dio la respuesta">${esc(s.why||"")}</textarea><div class="chips">${SEG.map(([v,t])=>`<button type="button" class="chip seg" data-n="${q.n}" data-s="${v}" aria-pressed="${s.seg===v}">${t}</button>`).join("")}</div></section>`;
+    });
+    const nr=g.preguntas.filter(q=>st(q.n).l!==undefined).length;
+    h+=`<div class="sendbar"><div class="row"><button type="button" class="btn" data-send="${gi}">Enviar a Claude (${nr} de ${g.preguntas.length})</button><button type="button" class="btn ghost" data-copy="${gi}">Copiar</button></div><span class="lbl" id="msg-${gi}" aria-live="polite"></span><textarea id="fb-${gi}" hidden readonly></textarea></div></section>`;
+  });
+  h+=`<div class="row"><button type="button" class="btn ghost" id="borrar">Borrar mis respuestas de este examen</button></div>`;
+  $("lect").innerHTML=h;
+}
+$("exs").addEventListener("click",ev=>{const b=ev.target.closest("[data-ex]");if(!b)return;exId=b.dataset.ex;save("lect-ex",exId);render();window.scrollTo({top:$("lect").offsetTop-10});});
+$("lect").addEventListener("input",ev=>{if(ev.target.matches("textarea[data-n]"))setSt(+ev.target.dataset.n,{why:ev.target.value});});
+$("lect").addEventListener("click",ev=>{
+  const o=ev.target.closest(".opt[data-n]"), c=ev.target.closest(".chip.seg"), s=ev.target.closest("[data-send]"), cp=ev.target.closest("[data-copy]");
+  if(o){const n=+o.dataset.n,j=+o.dataset.j;setSt(n,{l:st(n).l===j?undefined:j});refresh(n);return;}
+  if(c){const n=+c.dataset.n;setSt(n,{seg:st(n).seg===c.dataset.s?undefined:c.dataset.s});refresh(n);return;}
+  if(s){enviar(+s.dataset.send,true);return;}
+  if(cp){enviar(+cp.dataset.copy,false);return;}
+  if(ev.target.id==="borrar"&&confirm("¿Borrar tus respuestas de este examen?")){delete R[exId];save("lect-resp",R);render();}
+});
+function refresh(n){
+  const s=st(n), card=$("lq-"+n);
+  card.querySelectorAll(".opt").forEach(b=>b.classList.toggle("sel",+b.dataset.j===s.l));
+  card.querySelectorAll(".chip.seg").forEach(b=>b.setAttribute("aria-pressed",b.dataset.s===s.seg));
+  const e=ex(); e.grupos.forEach((g,gi)=>{const btn=document.querySelector(`[data-send="${gi}"]`);if(btn)btn.textContent=`Enviar a Claude (${g.preguntas.filter(q=>st(q.n).l!==undefined).length} de ${g.preguntas.length})`;});
+  document.querySelectorAll("#exs [data-ex]").forEach(b=>{const x=b.dataset.ex;const r=Object.values(R[x]||{}).filter(v=>v.l!==undefined).length;b.querySelector("small").textContent=r+"/40";});
+}
+function mensaje(gi){
+  const e=ex(), g=e.grupos[gi];
+  const qs=g.preguntas.filter(q=>st(q.n).l!==undefined);
+  if(!qs.length) return null;
+  let m="Soy Juan y me preparo para el examen de admisión de la Universidad de Antioquia (prueba de Competencia Lectora). Eres mi tutor. Califica mis respuestas: en cada una dime primero si está BIEN o MAL, cuál es la correcta citando la frase del texto que la prueba, por qué caen las otras opciones y qué trampa usaron. Si alguna te deja una duda real entre dos opciones, dilo. Sé directo y breve, en español, sin emojis. Al final dame mi puntaje y el tipo de pregunta que más fallé.\n\n";
+  m+=`EXAMEN UdeA ${e.id} · ${g.nombre}\n`;
+  g.textos.forEach(i=>{const t=e.textos[i];m+=`\n${t.nombre.toUpperCase()}\n${t.parrafos.map((p,k)=>`${k+1}. ${p}`).join("\n")}\n${t.fuente?"("+t.fuente+")\n":""}`;});
+  m+="\nMIS RESPUESTAS\n";
+  qs.forEach(q=>{const s=st(q.n);const segT=(SEG.find(x=>x[0]===s.seg)||[0,"sin decir"])[1];
+    m+=`\n${q.n}. ${q.e}\n${q.o.map((o,j)=>`${L[j]}. ${o}`).join("\n")}\nMi respuesta: ${L[s.l]} (${segT})\nFrase del texto / por qué: ${(s.why||"").trim()||"(no escribí)"}\n`;});
+  return m;
+}
+function enviar(gi,share){
+  const m=mensaje(gi), msg=$("msg-"+gi), fb=$("fb-"+gi);
+  if(!m){msg.textContent="Primero responde al menos una pregunta de este grupo.";return;}
+  const copiar=()=>{
+    const show=()=>{fb.value=m;fb.hidden=false;fb.focus();fb.select();msg.textContent="Selecciona todo, copia y pégalo en el chat de Claude.";};
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(m).then(()=>{fb.hidden=true;msg.textContent="Copiado. Abre Claude y pégalo en un chat.";}).catch(show); else show();
+  };
+  if(share&&navigator.share){navigator.share({text:m}).then(()=>{msg.textContent="Enviado. Mira la respuesta en Claude.";}).catch(err=>{if(err&&err.name==="AbortError")msg.textContent="";else copiar();});}
+  else copiar();
+}
+if(load("vista","logica")==="lectura") tabs("lectura");
+})();
 </script>
 </body>
 </html>
